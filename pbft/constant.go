@@ -12,6 +12,10 @@ const (
 	NodeCount = 4
 	// leader
 	LeaderID = "3"
+	//TODO 开启Leader轮转选举
+
+	//TODO 选举方式
+
 )
 
 // 节点table

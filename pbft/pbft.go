@@ -213,7 +213,7 @@ func (p *PBFT) CheckReply(r Reply, b *bool) error {
 		p.ReplyCount[r.MessageID]++
 	}
 	// client check the reply accepted by 1/3 node is successfully
-	if p.ReplyCount[r.MessageID] > NodeCount/3-1 {
+	if p.ReplyCount[r.MessageID] >= NodeCount/3 {
 		p.ReplyChan <- r.MessageID
 	}
 	return nil

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"distributed_system/pbft"
 	"fmt"
 	"os"
+	"simple-pbft/pbft"
 	"time"
 )
 

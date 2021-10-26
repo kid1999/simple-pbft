@@ -1,4 +1,4 @@
-module distributed_system
+module simple-pbft
 
 go 1.17
 
