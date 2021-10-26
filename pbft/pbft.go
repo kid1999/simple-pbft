@@ -47,8 +47,11 @@ type PBFT struct {
 	isReply map[string]bool
 	//当前节点的领导
 	currentLeader string
-	//心跳信号
+	// TODO: 心跳信号
 	heartBeat chan bool
+	//Reply结果
+	ReplyCount map[int]int
+	ReplyChan  chan int
 }
 
 func NewPBFT(nodeID, addr string) *PBFT {
@@ -63,8 +66,11 @@ func NewPBFT(nodeID, addr string) *PBFT {
 	p.commitConfirmCount = make(map[string]map[string]bool)
 	p.isCommitBordcast = make(map[string]bool)
 	p.isReply = make(map[string]bool)
+	//TODO: Leader 轮转选举
 	p.currentLeader = LeaderID
 	p.heartBeat = make(chan bool)
+	p.ReplyCount = make(map[int]int)
+	p.ReplyChan = make(chan int)
 	return p
 }
 
@@ -156,7 +162,7 @@ func (p *PBFT) HandlePrepare(pre Prepare, b *bool) error {
 			c := Commit{pre.Digest, pre.SequenceID, p.node.nodeID, sign}
 			//进行提交信息的广播
 			fmt.Println("正在进行commit广播")
-			go p.broadcast("PBTF.HandleCommit", c, func(ok bool) {})
+			go p.broadcast("PBFT.HandleCommit", c, func(ok bool) {})
 			p.isCommitBordcast[pre.Digest] = true
 			fmt.Println("commit广播完成")
 		}
@@ -201,8 +207,15 @@ func (p *PBFT) HandleCommit(c Commit, b *bool) error {
 	return nil
 }
 
+// client check the reply
 func (p *PBFT) CheckReply(r Reply, b *bool) error {
-	fmt.Println(r)
+	if r.Result {
+		p.ReplyCount[r.MessageID]++
+	}
+	// client check the reply accepted by 1/3 node is successfully
+	if p.ReplyCount[r.MessageID] > NodeCount/3-1 {
+		p.ReplyChan <- r.MessageID
+	}
 	return nil
 }
 

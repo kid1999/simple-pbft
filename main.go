@@ -24,12 +24,11 @@ func main() {
 func Run(id string, addr string) {
 	p := pbft.NewPBFT(id, addr)
 	// 注册 pbft rpc server
-	fmt.Println("注册 pbft rpc server")
+	fmt.Println("node ", id, " started.")
 	go pbft.RpcRegister(p)
-	time.Sleep(time.Second)
 	// 开启一个监听节点
 	if id == "1" {
-		pbft.HttpListenTest(p)
+		pbft.HttpListen(p)
 	}
 	for true {
 		time.Sleep(time.Second)

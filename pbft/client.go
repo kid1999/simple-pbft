@@ -41,7 +41,19 @@ func (p *PBFT) getRequest(writer http.ResponseWriter, request *http.Request) {
 			log.Panic(err)
 		}
 		fmt.Println("消息是否已发送到领导者：", b)
-		writer.Write([]byte("ok!!!"))
+		for {
+			select {
+			// set a timeout for the message
+			case <-time.After(time.Second * 20):
+				fmt.Println("message error: ", r.Message.ID)
+				writer.Write([]byte("error!!!"))
+				return
+			case id := <-p.ReplyChan:
+				fmt.Println("message reply successfully: ", id)
+				writer.Write([]byte("ok!!!"))
+				return
+			}
+		}
 	}
 }
 
@@ -55,14 +67,14 @@ func HttpListen(p *PBFT) {
 	}
 }
 
-func HttpListenTest(p *PBFT) {
+// sendMessage to Leader
+func (p *PBFT) sendMessage(data []byte) {
 	r := new(Request)
 	r.Timestamp = time.Now().UnixNano()
 	r.ClientAddr = p.node.addr
 	r.Message.ID = getRandom()
-	r.Message.Content = []byte("hello")
+	r.Message.Content = data
 	fmt.Println("http监听到了消息，准备发送给领导者，消息id:", r.Message.ID)
-	//http://localhost:8080/req?message=ohmygod
 	rp, err := rpc.DialHTTP("tcp", NodeTable[p.currentLeader])
 	if err != nil {
 		log.Panic(err)
@@ -73,6 +85,15 @@ func HttpListenTest(p *PBFT) {
 		log.Panic(err)
 	}
 	fmt.Println("消息是否已发送到领导者：", b)
+	for {
+		select {
+		// set a timeout for the message
+		case <-time.After(time.Second * 2):
+			fmt.Println("message error: ", r.Message.ID)
+		case id := <-p.ReplyChan:
+			fmt.Println("message reply successfully: ", id)
+		}
+	}
 }
 
 //返回一个十位数的随机数，作为msgid
